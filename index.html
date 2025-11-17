@@ -1,0 +1,530 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Training Log – Mobile + Graph</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 16px 12px 40px;
+      background: #050505;
+      color: #f5f5f5;
+    }
+    h1, h2 {
+      letter-spacing: 0.05em;
+    }
+    h1 {
+      font-size: 20px;
+      margin: 0 0 8px;
+      text-align: left;
+    }
+    h2 {
+      font-size: 16px;
+      margin: 20px 0 8px;
+      color: #d4af37;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .badge {
+      font-size: 11px;
+      border-radius: 999px;
+      padding: 2px 10px;
+      border: 1px solid #444;
+      color: #ccc;
+      white-space: nowrap;
+    }
+    .badge span {
+      color: #d4af37;
+    }
+
+    form {
+      border: 1px solid #333;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 18px;
+      background: radial-gradient(circle at top left, #202020 0, #050505 55%, #000 100%);
+      box-shadow: 0 0 20px rgba(0,0,0,0.7);
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    label {
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    input, select {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #555;
+      background: #111;
+      color: #f5f5f5;
+      font-size: 14px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    input::placeholder {
+      color: #777;
+    }
+    .small {
+      font-size: 11px;
+      color: #aaa;
+      margin-bottom: 6px;
+    }
+
+    .button-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    button {
+      padding: 10px 14px;
+      cursor: pointer;
+      border-radius: 999px;
+      border: 1px solid #d4af37;
+      background: linear-gradient(135deg, #d4af37, #a67c00);
+      color: #050505;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      width: 100%;
+    }
+    button#clearBtn {
+      border-color: #aa3333;
+      background: linear-gradient(135deg, #552222, #220000);
+      color: #f5f5f5;
+    }
+    button:hover {
+      filter: brightness(1.05);
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 4px;
+      background: #080808;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 16px rgba(0,0,0,0.6);
+    }
+    th, td {
+      border: 1px solid #222;
+      padding: 4px 4px;
+      text-align: center;
+      word-break: break-word;
+    }
+    th {
+      background: linear-gradient(90deg, #1a1a1a, #262626);
+      color: #d4af37;
+      font-weight: 600;
+    }
+    tr:nth-child(even) td {
+      background: #0c0c0c;
+    }
+    tr:nth-child(odd) td {
+      background: #111;
+    }
+
+    #chartContainer {
+      margin-top: 6px;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid #333;
+      background: radial-gradient(circle at top right, #202020 0, #050505 55%, #000 100%);
+      box-shadow: 0 0 20px rgba(0,0,0,0.7);
+    }
+    #chartExercise {
+      margin-top: 4px;
+    }
+    canvas {
+      margin-top: 10px;
+      max-width: 100%;
+      background: #050505;
+      border-radius: 8px;
+      border: 1px solid #222;
+    }
+
+    @media (min-width: 480px) {
+      .button-row {
+        flex-direction: row;
+      }
+      button {
+        width: auto;
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <h1>Training Log – Push / Pull</h1>
+    <div class="badge">UI: <span>Mobile Black × Gold</span></div>
+  </div>
+
+  <form id="logForm">
+    <div class="field-group">
+      <label>
+        日付
+        <input type="date" id="date">
+      </label>
+    </div>
+
+    <div class="field-group">
+      <label>
+        種別
+        <select id="type">
+          <option value="Push">Push</option>
+          <option value="Pull">Pull</option>
+        </select>
+      </label>
+
+      <label>
+        種目
+        <select id="exercise"></select>
+      </label>
+    </div>
+
+    <div class="small">※「重量×回数」を 例: <code>50x8</code> / <code>45×10</code> のように入力</div>
+
+    <div class="field-group">
+      <label>
+        1set
+        <input type="text" id="set1" placeholder="例: 50x8">
+      </label>
+      <label>
+        2set
+        <input type="text" id="set2" placeholder="例: 50x8">
+      </label>
+      <label>
+        3set
+        <input type="text" id="set3" placeholder="例: 45x10">
+      </label>
+    </div>
+
+    <div class="button-row">
+      <button type="submit">記録する</button>
+      <button type="button" id="clearBtn">全削除（注意）</button>
+    </div>
+  </form>
+
+  <h2>記録一覧</h2>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>日付</th>
+          <th>種別</th>
+          <th>種目</th>
+          <th>1set</th>
+          <th>2set</th>
+          <th>3set</th>
+          <th>Volume</th>
+        </tr>
+      </thead>
+      <tbody id="logBody"></tbody>
+    </table>
+  </div>
+
+  <h2>成長グラフ</h2>
+  <div id="chartContainer">
+    <label>
+      種目を選択
+      <select id="chartExercise"></select>
+    </label>
+    <canvas id="progressChart" height="190"></canvas>
+  </div>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    var STORAGE_KEY = "trainingLogs_mobile_graph_v1";
+
+    // ▼ 種目リスト
+    var exercises = {
+      "Push": [
+        "BP（ベンチプレス）",
+        "IBP（インクラインベンチプレス）",
+        "Dips（ディップス）",
+        "Shoulder Press（ショルダープレス）",
+        "Cable Triceps Extension（ケーブルトライセプス）",
+        "Plate Push（プレートプッシュ）"
+      ],
+      "Pull": [
+        "Pull Up（懸垂）",
+        "1H DB Row（ワンハンドダンベルロウ）",
+        "BB Arm Curl（バーベルアームカール）",
+        "Lat Pull Down（ラットプルダウン）",
+        "Hammer Curl（ハンマーカール）",
+        "Bent Over Row（ベントオーバーロウ）"
+      ]
+    };
+
+    var typeInput = document.getElementById("type");
+    var exerciseInput = document.getElementById("exercise");
+    var dateInput = document.getElementById("date");
+    var set1Input = document.getElementById("set1");
+    var set2Input = document.getElementById("set2");
+    var set3Input = document.getElementById("set3");
+    var logBody = document.getElementById("logBody");
+    var chartExerciseSelect = document.getElementById("chartExercise");
+    var progressChart = null;
+
+    // ▼ 種別選択で種目候補を更新
+    function updateExercises() {
+      var type = typeInput.value;
+      exerciseInput.innerHTML = "";
+      var list = exercises[type] || [];
+      for (var i = 0; i < list.length; i++) {
+        var ex = list[i];
+        var opt = document.createElement("option");
+        opt.value = ex;
+        opt.textContent = ex;
+        exerciseInput.appendChild(opt);
+      }
+    }
+
+    // ▼ グラフ用 種目選択肢（Push + Pull 全部）
+    function initChartExerciseOptions() {
+      var all = [];
+      for (var key in exercises) {
+        if (!exercises.hasOwnProperty(key)) continue;
+        var arr = exercises[key];
+        for (var i = 0; i < arr.length; i++) {
+          if (all.indexOf(arr[i]) === -1) {
+            all.push(arr[i]);
+          }
+        }
+      }
+      chartExerciseSelect.innerHTML = "";
+      for (var j = 0; j < all.length; j++) {
+        var ex = all[j];
+        var opt = document.createElement("option");
+        opt.value = ex;
+        opt.textContent = ex;
+        chartExerciseSelect.appendChild(opt);
+      }
+    }
+
+    // ▼ 今日の日付を自動セット（非対応環境でも落ちないように）
+    try {
+      dateInput.valueAsNumber = Date.now() - (new Date()).getTimezoneOffset() * 60000;
+    } catch (e) {
+      // 非対応なら無視
+    }
+
+    // ▼ ローカル保存関連（古いSafariでも落ちないように）
+    function loadLogs() {
+      var raw = null;
+      try {
+        raw = localStorage.getItem(STORAGE_KEY);
+      } catch (e) {
+        return [];
+      }
+      if (!raw) return [];
+      try {
+        return JSON.parse(raw);
+      } catch (e2) {
+        return [];
+      }
+    }
+
+    function saveLogs(logs) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+      } catch (e) {
+        // 保存できない環境なら何もしない
+      }
+    }
+
+    // 「50x8」や「45×10」を Volume に変換
+    function parseSetVolume(str) {
+      if (!str) return 0;
+      var s = String(str).toLowerCase().replace("×", "x").trim();
+      if (s.indexOf("x") === -1) return 0;
+      var parts = s.split("x");
+      if (parts.length !== 2) return 0;
+      var w = parseFloat(parts[0]);
+      var r = parseFloat(parts[1]);
+      if (isNaN(w) || isNaN(r)) return 0;
+      return w * r;
+    }
+
+    function calcTotalVolume(log) {
+      return (
+        parseSetVolume(log.set1) +
+        parseSetVolume(log.set2) +
+        parseSetVolume(log.set3)
+      );
+    }
+
+    // ▼ テーブル描画
+    function renderTable() {
+      var logs = loadLogs();
+      logBody.innerHTML = "";
+      for (var i = 0; i < logs.length; i++) {
+        var log = logs[i];
+        var vol = calcTotalVolume(log);
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + log.date + "</td>" +
+          "<td>" + log.type + "</td>" +
+          "<td>" + log.exercise + "</td>" +
+          "<td>" + (log.set1 || "") + "</td>" +
+          "<td>" + (log.set2 || "") + "</td>" +
+          "<td>" + (log.set3 || "") + "</td>" +
+          "<td>" + (vol || "") + "</td>";
+        logBody.appendChild(tr);
+      }
+    }
+
+    // ▼ グラフ描画
+    function renderChart() {
+      var logs = loadLogs();
+      var exName = chartExerciseSelect.value;
+      if (!exName) return;
+
+      var filtered = [];
+      for (var i = 0; i < logs.length; i++) {
+        if (logs[i].exercise === exName) {
+          filtered.push(logs[i]);
+        }
+      }
+      // 日付順にソート
+      filtered.sort(function(a, b) {
+        if (a.date > b.date) return 1;
+        if (a.date < b.date) return -1;
+        return 0;
+      });
+
+      var labels = [];
+      var data = [];
+      for (var j = 0; j < filtered.length; j++) {
+        labels.push(filtered[j].date);
+        data.push(calcTotalVolume(filtered[j]));
+      }
+
+      var ctx = document.getElementById("progressChart").getContext("2d");
+
+      if (progressChart) {
+        progressChart.destroy();
+      }
+
+      progressChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: exName + " Volume",
+            data: data,
+            borderColor: "rgba(212, 175, 55, 1)",
+            backgroundColor: "rgba(212, 175, 55, 0.18)",
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.35
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              labels: {
+                color: "#f5f5f5",
+                font: { size: 10 }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: "#ccc", maxRotation: 60, minRotation: 30 },
+              grid: { color: "#222" }
+            },
+            y: {
+              ticks: { color: "#ccc" },
+              grid: { color: "#222" }
+            }
+          }
+        }
+      });
+    }
+
+    // ▼ 記録の追加
+    document.getElementById("logForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      var data = {
+        date: dateInput.value,
+        type: typeInput.value,
+        exercise: exerciseInput.value,
+        set1: set1Input.value.trim(),
+        set2: set2Input.value.trim(),
+        set3: set3Input.value.trim()
+      };
+
+      if (!data.date || !data.exercise) {
+        alert("日付と種目は必須です。");
+        return;
+      }
+
+      var logs = loadLogs();
+      logs.push(data);
+      saveLogs(logs);
+      renderTable();
+      renderChart();
+
+      set1Input.value = "";
+      set2Input.value = "";
+      set3Input.value = "";
+    });
+
+    // ▼ 全削除ボタン（iPhoneでも確実に動くように）
+    document.getElementById("clearBtn").addEventListener("click", function () {
+      var ok = confirm("本当に全て削除しますか？");
+      if (!ok) return;
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+      } catch (e) {
+        console.log(e);
+      }
+
+      renderTable();
+      renderChart();
+    });
+
+    // ▼ イベント & 初期化
+    typeInput.addEventListener("change", function() {
+      updateExercises();
+    });
+    chartExerciseSelect.addEventListener("change", function() {
+      renderChart();
+    });
+
+    // 初期表示
+    updateExercises();
+    initChartExerciseOptions();
+    renderTable();
+    renderChart();
+  </script>
+</body>
+</html>
