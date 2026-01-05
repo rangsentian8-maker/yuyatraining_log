@@ -265,30 +265,88 @@
 
   <h2>下半身（Legs）</h2>
 
-  <label>
-    日付
-    <input type="date" id="legsDate">
-  </label>
+  <div style="border:1px solid #333; padding:12px; border-radius:12px; margin-bottom:18px;
+              background: radial-gradient(circle at top left, #202020 0, #050505 55%, #000 100%);
+              box-shadow: 0 0 20px rgba(0,0,0,0.7);">
+    <label style="display:block; font-size:13px; margin-bottom:8px;">
+      日付
+      <input type="date" id="legsDate" style="width:100%; margin-top:4px;">
+    </label>
 
-  <label>
-    種目
-    <select id="legsExercise">
-      <option>Bulgarian SQ</option>
-      <option>Step Lunge SQ</option>
-      <option>KB Swing</option>
-    </select>
-  </label>
+    <label style="display:block; font-size:13px; margin-bottom:8px;">
+      種目
+      <select id="legsExercise" style="width:100%; margin-top:4px;">
+        <option value="Bulgarian SQ">Bulgarian SQ</option>
+        <option value="Step Lunge SQ">Step Lunge SQ</option>
+        <option value="KB Swing">KB Swing</option>
+      </select>
+    </label>
 
-  <label>1set <input id="legsSet1"></label>
-  <label>2set <input id="legsSet2"></label>
-  <label>3set <input id="legsSet3"></label>
+    <div style="font-size:11px; color:#aaa; margin:8px 0 10px;">
+      ※「重量×回数」例：<code>24x12</code> / <code>40×10</code>
+    </div>
 
-  <button id="legsSave">下半身を記録</button>
-  <button id="legsClear">下半身を全削除</button>
+    <label style="display:block; font-size:13px; margin-bottom:8px;">
+      1set
+      <input id="legsSet1" placeholder="例: 24x12" style="width:100%; margin-top:4px;">
+    </label>
+    <label style="display:block; font-size:13px; margin-bottom:8px;">
+      2set
+      <input id="legsSet2" placeholder="例: 24x12" style="width:100%; margin-top:4px;">
+    </label>
+    <label style="display:block; font-size:13px; margin-bottom:8px;">
+      3set
+      <input id="legsSet3" placeholder="例: 20x15" style="width:100%; margin-top:4px;">
+    </label>
 
-  <table>
-    <tbody id="legsLog"></tbody>
-  </table>
+    <div style="display:flex; gap:8px; margin-top:10px; flex-direction:column;">
+      <button type="button" id="legsSave"
+        style="padding:10px 14px; border-radius:999px; border:1px solid #d4af37;
+               background: linear-gradient(135deg, #d4af37, #a67c00);
+               color:#050505; font-weight:700; font-size:14px;">
+        下半身を記録
+      </button>
+
+      <button type="button" id="legsClear"
+        style="padding:10px 14px; border-radius:999px; border:1px solid #aa3333;
+               background: linear-gradient(135deg, #552222, #220000);
+               color:#f5f5f5; font-weight:700; font-size:14px;">
+        下半身を全削除（注意）
+      </button>
+    </div>
+  </div>
+
+  <h2>記録一覧（下半身）</h2>
+  <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+    <table style="width:100%; border-collapse:collapse; font-size:11px; background:#080808; border-radius:10px; overflow:hidden;">
+      <thead>
+        <tr>
+          <th style="border:1px solid #222; padding:4px; color:#d4af37; background:#1a1a1a;">日付</th>
+          <th style="border:1px solid #222; padding:4px; color:#d4af37; background:#1a1a1a;">種目</th>
+          <th style="border:1px solid #222; padding:4px; color:#d4af37; background:#1a1a1a;">1set</th>
+          <th style="border:1px solid #222; padding:4px; color:#d4af37; background:#1a1a1a;">2set</th>
+          <th style="border:1px solid #222; padding:4px; color:#d4af37; background:#1a1a1a;">3set</th>
+          <th style="border:1px solid #222; padding:4px; color:#d4af37; background:#1a1a1a;">Volume</th>
+        </tr>
+      </thead>
+      <tbody id="legsLog"></tbody>
+    </table>
+  </div>
+
+  <h2>成長グラフ（下半身）</h2>
+  <div style="margin-top:6px; padding:10px; border-radius:12px; border:1px solid #333;
+              background: radial-gradient(circle at top right, #202020 0, #050505 55%, #000 100%);
+              box-shadow: 0 0 20px rgba(0,0,0,0.7);">
+    <label style="font-size:13px;">
+      種目を選択
+      <select id="legsChartExercise" style="width:100%; margin-top:4px;">
+        <option value="Bulgarian SQ">Bulgarian SQ</option>
+        <option value="Step Lunge SQ">Step Lunge SQ</option>
+        <option value="KB Swing">KB Swing</option>
+      </select>
+    </label>
+    <canvas id="legsChart" height="190" style="margin-top:10px; max-width:100%; background:#050505; border-radius:8px; border:1px solid #222;"></canvas>
+  </div>
 
 </div>
 
@@ -574,6 +632,157 @@ btnLegs.onclick = () => {
   upperSec.style.display = "none";
   legsSec.style.display = "block";
 };
+// ====== LEGS (下半身) 追加 ======
+const LEGS_KEY = "trainingLogs_legs_v1";
+
+const legsDate = document.getElementById("legsDate");
+const legsExercise = document.getElementById("legsExercise");
+const legsSet1 = document.getElementById("legsSet1");
+const legsSet2 = document.getElementById("legsSet2");
+const legsSet3 = document.getElementById("legsSet3");
+const legsLogBody = document.getElementById("legsLog");
+const legsChartExercise = document.getElementById("legsChartExercise");
+
+let legsChartInstance = null;
+
+// 今日の日付をセット（iPhoneでも落ちない）
+try {
+  legsDate.valueAsNumber = Date.now() - (new Date()).getTimezoneOffset() * 60000;
+} catch (e) {}
+
+function legsLoad() {
+  try {
+    const raw = localStorage.getItem(LEGS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function legsSaveAll(list) {
+  try {
+    localStorage.setItem(LEGS_KEY, JSON.stringify(list));
+  } catch (e) {}
+}
+
+function parseSetVolume(str) {
+  if (!str) return 0;
+  const s = String(str).toLowerCase().replace("×", "x").trim();
+  if (!s.includes("x")) return 0;
+  const parts = s.split("x");
+  if (parts.length !== 2) return 0;
+  const w = parseFloat(parts[0]);
+  const r = parseFloat(parts[1]);
+  if (isNaN(w) || isNaN(r)) return 0;
+  return w * r;
+}
+
+function legsTotalVolume(item) {
+  return (
+    parseSetVolume(item.set1) +
+    parseSetVolume(item.set2) +
+    parseSetVolume(item.set3)
+  );
+}
+
+function legsRenderTable() {
+  const list = legsLoad();
+  legsLogBody.innerHTML = "";
+
+  for (let i = 0; i < list.length; i++) {
+    const it = list[i];
+    const vol = legsTotalVolume(it);
+
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      `<td style="border:1px solid #222; padding:4px;">${it.date}</td>` +
+      `<td style="border:1px solid #222; padding:4px;">${it.exercise}</td>` +
+      `<td style="border:1px solid #222; padding:4px;">${it.set1 || ""}</td>` +
+      `<td style="border:1px solid #222; padding:4px;">${it.set2 || ""}</td>` +
+      `<td style="border:1px solid #222; padding:4px;">${it.set3 || ""}</td>` +
+      `<td style="border:1px solid #222; padding:4px;">${vol || ""}</td>`;
+    legsLogBody.appendChild(tr);
+  }
+}
+
+function legsRenderChart() {
+  const list = legsLoad();
+  const ex = legsChartExercise.value;
+  if (!ex) return;
+
+  const filtered = list.filter(x => x.exercise === ex)
+    .sort((a,b) => (a.date > b.date ? 1 : a.date < b.date ? -1 : 0));
+
+  const labels = filtered.map(x => x.date);
+  const data = filtered.map(x => legsTotalVolume(x));
+
+  const ctx = document.getElementById("legsChart").getContext("2d");
+  if (legsChartInstance) legsChartInstance.destroy();
+
+  legsChartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: ex + " Volume",
+        data,
+        borderColor: "rgba(212, 175, 55, 1)",
+        backgroundColor: "rgba(212, 175, 55, 0.18)",
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        tension: 0.35
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: "#f5f5f5", font: { size: 10 } } } },
+      scales: {
+        x: { ticks: { color: "#ccc", maxRotation: 60, minRotation: 30 }, grid: { color: "#222" } },
+        y: { ticks: { color: "#ccc" }, grid: { color: "#222" } }
+      }
+    }
+  });
+}
+
+document.getElementById("legsSave").addEventListener("click", function () {
+  const item = {
+    date: legsDate.value,
+    exercise: legsExercise.value,
+    set1: (legsSet1.value || "").trim(),
+    set2: (legsSet2.value || "").trim(),
+    set3: (legsSet3.value || "").trim()
+  };
+
+  if (!item.date || !item.exercise) {
+    alert("日付と種目は必須です。");
+    return;
+  }
+
+  const list = legsLoad();
+  list.push(item);
+  legsSaveAll(list);
+
+  legsSet1.value = "";
+  legsSet2.value = "";
+  legsSet3.value = "";
+
+  legsRenderTable();
+  legsRenderChart();
+});
+
+document.getElementById("legsClear").addEventListener("click", function () {
+  const ok = confirm("下半身ログを全て削除しますか？");
+  if (!ok) return;
+  legsSaveAll([]);
+  legsRenderTable();
+  legsRenderChart();
+});
+
+legsChartExercise.addEventListener("change", legsRenderChart);
+
+// 初期描画
+legsRenderTable();
+legsRenderChart();
 
   </script>
 </body>
