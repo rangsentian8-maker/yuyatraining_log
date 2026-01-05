@@ -175,7 +175,11 @@
   </style>
 </head>
 <body>
-
+<div style="display:flex; gap:8px; margin-bottom:12px;">
+  <button id="btnUpper">上半身</button>
+  <button id="btnLegs">下半身</button>
+</div>
+  <div id="upperSection">
   <div class="top-bar">
     <h1>Training Log – Push / Pull</h1>
     <div class="badge">UI: <span>Mobile Black × Gold</span></div>
@@ -256,6 +260,37 @@
 
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</div>
+  <div id="legsSection" style="display:none;">
+
+  <h2>下半身（Legs）</h2>
+
+  <label>
+    日付
+    <input type="date" id="legsDate">
+  </label>
+
+  <label>
+    種目
+    <select id="legsExercise">
+      <option>Bulgarian SQ</option>
+      <option>Step Lunge SQ</option>
+      <option>KB Swing</option>
+    </select>
+  </label>
+
+  <label>1set <input id="legsSet1"></label>
+  <label>2set <input id="legsSet2"></label>
+  <label>3set <input id="legsSet3"></label>
+
+  <button id="legsSave">下半身を記録</button>
+  <button id="legsClear">下半身を全削除</button>
+
+  <table>
+    <tbody id="legsLog"></tbody>
+  </table>
+
+</div>
 
   <script>
     var STORAGE_KEY = "trainingLogs_mobile_graph_v1";
@@ -525,6 +560,21 @@
     initChartExerciseOptions();
     renderTable();
     renderChart();
+    const btnUpper = document.getElementById("btnUpper");
+const btnLegs  = document.getElementById("btnLegs");
+const upperSec = document.getElementById("upperSection");
+const legsSec  = document.getElementById("legsSection");
+
+btnUpper.onclick = () => {
+  upperSec.style.display = "block";
+  legsSec.style.display = "none";
+};
+
+btnLegs.onclick = () => {
+  upperSec.style.display = "none";
+  legsSec.style.display = "block";
+};
+
   </script>
 </body>
 </html>
