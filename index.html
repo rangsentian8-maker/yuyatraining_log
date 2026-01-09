@@ -298,6 +298,11 @@
       3set
       <input id="legsSet3" placeholder="例: 20x15" style="width:100%; margin-top:4px;">
     </label>
+    <label style="display:block; font-size:13px; margin-bottom:8px;">
+ 　 4set
+  <input id="legsSet4" placeholder="例: 18x15" style="width:100%; margin-top:4px;">
+</label>
+
 
     <div style="display:flex; gap:8px; margin-top:10px; flex-direction:column;">
       <button type="button" id="legsSave"
@@ -326,6 +331,7 @@
           <th style="border:1px solid #222; padding:4px; color:#d4af37; background:#1a1a1a;">1set</th>
           <th style="border:1px solid #222; padding:4px; color:#d4af37; background:#1a1a1a;">2set</th>
           <th style="border:1px solid #222; padding:4px; color:#d4af37; background:#1a1a1a;">3set</th>
+          <th style="border:1px solid #222; padding:4px; color:#d4af37; background:#1a1a1a;">4set</th>
           <th style="border:1px solid #222; padding:4px; color:#d4af37; background:#1a1a1a;">Volume</th>
         </tr>
       </thead>
@@ -640,6 +646,7 @@ const legsExercise = document.getElementById("legsExercise");
 const legsSet1 = document.getElementById("legsSet1");
 const legsSet2 = document.getElementById("legsSet2");
 const legsSet3 = document.getElementById("legsSet3");
+const legsSet4 = document.getElementById("legsSet4");
 const legsLogBody = document.getElementById("legsLog");
 const legsChartExercise = document.getElementById("legsChartExercise");
 
@@ -681,9 +688,11 @@ function legsTotalVolume(item) {
   return (
     parseSetVolume(item.set1) +
     parseSetVolume(item.set2) +
-    parseSetVolume(item.set3)
+    parseSetVolume(item.set3) +
+    parseSetVolume(item.set4)
   );
 }
+
 
 function legsRenderTable() {
   const list = legsLoad();
@@ -700,6 +709,7 @@ function legsRenderTable() {
       `<td style="border:1px solid #222; padding:4px;">${it.set1 || ""}</td>` +
       `<td style="border:1px solid #222; padding:4px;">${it.set2 || ""}</td>` +
       `<td style="border:1px solid #222; padding:4px;">${it.set3 || ""}</td>` +
+      `<td style="border:1px solid #222; padding:4px;">${it.set4 || ""}</td>` +
       `<td style="border:1px solid #222; padding:4px;">${vol || ""}</td>`;
     legsLogBody.appendChild(tr);
   }
@@ -750,7 +760,8 @@ document.getElementById("legsSave").addEventListener("click", function () {
     exercise: legsExercise.value,
     set1: (legsSet1.value || "").trim(),
     set2: (legsSet2.value || "").trim(),
-    set3: (legsSet3.value || "").trim()
+    set3: (legsSet3.value || "").trim(),
+  set4: (legsSet4.value || "").trim()
   };
 
   if (!item.date || !item.exercise) {
@@ -765,6 +776,8 @@ document.getElementById("legsSave").addEventListener("click", function () {
   legsSet1.value = "";
   legsSet2.value = "";
   legsSet3.value = "";
+  legsSet4.value = "";
+
 
   legsRenderTable();
   legsRenderChart();
